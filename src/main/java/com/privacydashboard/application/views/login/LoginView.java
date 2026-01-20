@@ -8,7 +8,7 @@ import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.UnorderedList;
 import com.vaadin.flow.component.html.ListItem;
-import com.vaadin.flow.component.html.Code;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -96,7 +96,13 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
         H4 header = new H4(title);
         Paragraph creds = new Paragraph();
-        creds.add(new Code("user=" + username + "  password=" + password));
+        Span credsCode = new Span("user=" + username + "  password=" + password);
+        credsCode.getStyle()
+                .set("font-family", "monospace")
+                .set("background", "var(--lumo-contrast-5pct)")
+                .set("padding", "2px 6px")
+                .set("border-radius", "6px");
+        creds.add(credsCode);
 
         UnorderedList list = new UnorderedList();
         for (String capability : capabilities) {
