@@ -1,7 +1,16 @@
 # Stage that builds the application, a prerequisite for the running stage
-FROM maven:3.8.6-eclipse-temurin-18 as build
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-RUN apt-get update -qq && apt-get install -qq --no-install-recommends nodejs
+FROM maven:3.8.6-eclipse-temurin-11 as build
+
+# Vaadin 23 uses webpack 4, which fails on Node 17+ unless the legacy OpenSSL
+# provider is enabled.
+ENV NODE_OPTIONS="--openssl-legacy-provider"
+
+RUN apt-get update -qq \
+  && apt-get install -qq --no-install-recommends ca-certificates curl gnupg git python3 make g++ \
+  && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+  && apt-get update -qq \
+  && apt-get install -qq --no-install-recommends nodejs \
+  && rm -rf /var/lib/apt/lists/*
 
 # Stop running as root at this point
 RUN useradd -m myuser
@@ -31,7 +40,7 @@ RUN mkdir -p src/main/resources/static/react && cp -r react-frontend/dist/* src/
 RUN mvn clean package -DskipTests -Pproduction
 
 # Running stage: the part that is used for running the application
-FROM openjdk:22-oraclelinux8
+FROM eclipse-temurin:11-jre
 COPY --from=build /usr/src/app/target/*.jar /usr/app/app.jar
 RUN useradd -m myuser
 USER myuser
