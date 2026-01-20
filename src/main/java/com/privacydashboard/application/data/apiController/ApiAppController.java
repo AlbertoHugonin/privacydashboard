@@ -195,7 +195,7 @@ public class ApiAppController {
         }
 
         if(newApp.getQuestionnaireVote()!=null || newApp.getDetailVote()!=null || newApp.getOptionalAnswers()!=null){
-            dataBaseService.updateQuestionnaireForApp(oldApp, oldApp.getQuestionnaireVote(), oldApp.getDetailVote(), oldApp.getOptionalAnswers());
+            dataBaseService.updateQuestionnaireForApp(oldApp, newApp.getQuestionnaireVote(), newApp.getDetailVote(), newApp.getOptionalAnswers());
         }
     }
 

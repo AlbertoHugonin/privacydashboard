@@ -95,8 +95,9 @@ public class ApiUserAppRelationController {
     public ResponseEntity<?> addConsenses(@RequestParam() String userId, @RequestParam() String appId, @RequestBody() String body){
         try{
             IoTApp app= apiGeneralController.getAppFromId(appId);
-            if(!apiGeneralController.isControllerOrDpo(true, null)){
-                return ResponseEntity.badRequest().body("You must be a controller/DPO");
+            boolean isSelf = apiGeneralController.isAuthenticatedUserId(userId);
+            if(!isSelf && !apiGeneralController.isControllerOrDpo(true, null)){
+                return ResponseEntity.badRequest().body("You must be a controller/DPO or the user identified by the userId");
             }
             if(!apiGeneralController.userHasApp(apiGeneralController.getAuthenicatedUser(), app)){
                 return ResponseEntity.badRequest().body("you must be connected with the app");
@@ -161,8 +162,9 @@ public class ApiUserAppRelationController {
     public ResponseEntity<?> removeConsenses(@RequestParam() String userId, @RequestParam() String appId, @RequestBody() String body){
         try{
             IoTApp app= apiGeneralController.getAppFromId(appId);
-            if(!apiGeneralController.isControllerOrDpo(true, null)){
-                return ResponseEntity.badRequest().body("You must be a controller/DPO");
+            boolean isSelf = apiGeneralController.isAuthenticatedUserId(userId);
+            if(!isSelf && !apiGeneralController.isControllerOrDpo(true, null)){
+                return ResponseEntity.badRequest().body("You must be a controller/DPO or the user identified by the userId");
             }
             if(!apiGeneralController.userHasApp(apiGeneralController.getAuthenicatedUser(), app)){
                 return ResponseEntity.badRequest().body("you must be connected with the app");
@@ -198,8 +200,9 @@ public class ApiUserAppRelationController {
     public ResponseEntity<?> removeAllConsenses(@RequestParam() String userId, @RequestParam() String appId){
         try{
             IoTApp app= apiGeneralController.getAppFromId(appId);
-            if(!apiGeneralController.isControllerOrDpo(true, null)){
-                return ResponseEntity.badRequest().body("You must be a controller/DPO");
+            boolean isSelf = apiGeneralController.isAuthenticatedUserId(userId);
+            if(!isSelf && !apiGeneralController.isControllerOrDpo(true, null)){
+                return ResponseEntity.badRequest().body("You must be a controller/DPO or the user identified by the userId");
             }
             if(!apiGeneralController.userHasApp(apiGeneralController.getAuthenicatedUser(), app)){
                 return ResponseEntity.badRequest().body("you must be connected with the app");

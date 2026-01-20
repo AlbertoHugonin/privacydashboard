@@ -196,22 +196,10 @@ public class AppsView extends Div implements AfterNavigationObserver, BeforeEnte
         initilizeInfrastuctureEvaluation();
         initializeSearchText();
         initializeGrid();
-        VerticalLayout appLayout = new VerticalLayout();     
 
-        try{
-            List<IoTApp> apps = getJsonAppsFromUrl();
-            for (IoTApp app : apps) {
-                appLayout.add(createApp(app));
-            }            
-        }
-        catch(Exception e){
-            System.out.println("Exception: "+e);
-            Span exNotice = e.getMessage().equals("Size was 0") ? new Span("You do not have any apps.") : new Span("We could not retrieve your apps.");
-            exNotice.addClassName("bold");
-            appLayout.add(exNotice);
-        }
-
-        add(summaryEvaluation, searchText, appLayout, grid);
+        // The app list is loaded from the local database via DataBaseService (see updateGrid()).
+        // Avoid blocking the Vaadin UI thread with external network calls.
+        add(summaryEvaluation, searchText, grid);
     }
 
     private void initilizeInfrastuctureEvaluation(){

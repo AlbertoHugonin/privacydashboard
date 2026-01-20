@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  privacydashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8020:8020"
+    environment:
+      PORT: "8020"
+      VAADIN_LAUNCH_BROWSER: "false"
+      SERVER_FORWARD_HEADERS_STRATEGY: "framework"
+    restart: unless-stopped

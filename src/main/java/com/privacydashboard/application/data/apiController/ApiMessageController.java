@@ -95,6 +95,7 @@ public class ApiMessageController {
             for(User contact : userList){
                 ObjectNode conversation= mapper.createObjectNode();
                 conversation.put("contactName", contact.getName());
+                conversation.put("contactId", contact.getId().toString());
                 ArrayNode conversationArray = mapper.createArrayNode();
                 for(Message message : dataBaseService.getConversationFromUsers(user, contact)){
                     conversationArray.add(apiGeneralController.createJsonFromMessage(message));

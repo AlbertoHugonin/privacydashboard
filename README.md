@@ -4,11 +4,13 @@
 
 ## Log in the app
 
-To enter the application as a Data Subject: user=subject<number_between_0-49> password=subject<same_number> (e.g. user=subject25 password=subject25)
+Demo users created at startup (see `src/main/java/com/privacydashboard/application/data/generator/DataGenerator.java`):
 
-To enter the application as a Data Controller: user=controller<number_between_0-49> password=controller<same_number> (e.g. user=controller19 password=controller19)
+- Data Subject: user=`UserSubject` password=`UserSubject`
+- Data Controller: user=`UserController` password=`UserController`
+- DPO: user=`UserDPO` password=`UserDPO`
 
-To enter the application as a DPO: user=DPO<number_between_0-49> password=DPO<same_number> (e.g. user=DPO48 password=DPO48)
+Other demo users are also generated; their password is the same as their username.
 
 ## Application views
 
@@ -100,7 +102,7 @@ java -jar target/privacydashboard-1.0-SNAPSHOT.jar
 
 You can also run the program by typing in the IDE terminal the `mvn` command.
 
-Once the application is running, it can be found at the url `localhost:8080`.
+Once the application is running, it can be found at the url `localhost:11002` (or the value of the `PORT` env var).
 
 ## Project structure
 
@@ -110,6 +112,15 @@ Once the application is running, it can be found at the url `localhost:8080`.
 - `views` package in `src/main/java` contains the server-side Java views of your application.
 - `views` folder in `frontend/` contains the client-side JavaScript views of your application.
 - `themes` folder in `frontend/` contains the custom CSS styles.
+
+## React frontend (WIP)
+
+This repo now includes a new React SPA under `react-frontend/`, built to replace the current Vaadin (Java) UI while reusing the existing REST API (`/api/**`).
+
+Run it locally:
+- Start backend: `mvn spring-boot:run`
+- Start React dev server: `cd react-frontend && npm install && npm run dev`
+- Open: `http://localhost:5173/react/`
 
 ## Dependancies amd libraries used
 - Maven Spring Framework is used to create the Model-View-Controller implementation and provides the Web Services.
@@ -144,5 +155,15 @@ docker build . -t privacydashboard:latest
 Once the Docker image is correctly built, you can test it locally using
 
 ```
-docker run -p 8080:8080 privacydashboard:latest
+docker run -p 8020:8020 -e PORT=8020 privacydashboard:latest
+```
+
+Then open:
+- Old (Vaadin) UI: `http://localhost:8020/`
+- New (React) UI: `http://localhost:8020/react`
+
+Or with Docker Compose:
+
+```
+docker compose up --build -d
 ```

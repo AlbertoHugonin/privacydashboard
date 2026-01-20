@@ -205,7 +205,7 @@ public class ApiRightRequestController {
      * @return OK if successfully deleted. Bad Response if Request does not exist or not authorized
      */
     @DeleteMapping
-    @RequestMapping("api/rightrequest /delete")
+    @RequestMapping({"api/rightrequest/delete", "api/rightrequest /delete"})
     public ResponseEntity<?> delete(@RequestParam() String requestId){
         try{
             User user= apiGeneralController.getAuthenicatedUser();

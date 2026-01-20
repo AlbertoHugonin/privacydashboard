@@ -123,6 +123,40 @@ public class ApiPrivacyNoticeController {
     }
 
     /**
+     * Create or overwrite the Privacy Notice for an app.
+     * RESTRICTIONS: The one calling the function MUST be controller or DPO of the app.
+     * @param appId Id of the app of the privacy notice
+     * @param body JSON containing the new text (field: text)
+     * @return OK if successfully updated. Bad Request if invalid JSON or not authorized.
+     */
+    @PutMapping
+    @RequestMapping("api/privacynotice/updateFromApp")
+    public ResponseEntity<?> updateFromApp(@RequestParam() String appId, @RequestBody String body) {
+        try {
+            if (!apiGeneralController.isControllerOrDpo(true, null)) {
+                return ResponseEntity.badRequest().body("you must be a Controller or DPO");
+            }
+
+            IoTApp app = apiGeneralController.getAppFromId(appId);
+            User user = apiGeneralController.getAuthenicatedUser();
+            if (!dataBaseService.userHasApp(user, app)) {
+                return ResponseEntity.badRequest().body("you must be a Controller or DPO of the APP");
+            }
+
+            JsonNode rootNode = new ObjectMapper().readTree(new StringReader(body));
+            if (!rootNode.has("text")) {
+                return ResponseEntity.badRequest().body("text is missing");
+            }
+            dataBaseService.changePrivacyNoticeForApp(app, rootNode.get("text").asText());
+            return ResponseEntity.ok("Privacy Notice updated successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (IOException e) {
+            return ResponseEntity.badRequest().body("invalid JSON");
+        }
+    }
+
+    /**
      * Add Privacy Notice to various apps
      * RESTRICTIONS: The one calling the function MUST BE controller or DPO of the apps
      * @param body JSON representing the app's IDs and the text of the Privacy Notice

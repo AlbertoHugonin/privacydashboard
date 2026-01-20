@@ -9,6 +9,7 @@ import com.privacydashboard.application.data.entity.User;
 import com.privacydashboard.application.data.service.DataBaseService;
 import com.privacydashboard.application.security.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
@@ -43,6 +44,29 @@ public class ApiUserController {
         }
         catch (IllegalArgumentException e){
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * Get information about the currently authenticated user.
+     * RESTRICTIONS: Authenticated user required
+     * @return Json object representing the current user (without password). 401 if not authenticated.
+     */
+    @GetMapping
+    @RequestMapping("api/user/me")
+    public ResponseEntity<?> me() {
+        try {
+            User user = apiGeneralController.getAuthenicatedUser();
+            ObjectNode userJson = new ObjectMapper().createObjectNode();
+            userJson.put("id", user.getId().toString());
+            userJson.put("name", user.getName());
+            userJson.put("role", user.getRole().toString());
+            if (user.getMail() != null) {
+                userJson.put("mail", user.getMail());
+            }
+            return ResponseEntity.ok(userJson);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("not authenticated");
         }
     }
 
@@ -113,7 +137,12 @@ public class ApiUserController {
             User user= apiGeneralController.getUserFromId(userId);
             List<IoTApp> appList;
             User authenticatedUser= apiGeneralController.getAuthenicatedUser();
-            if(user.getRole().equals(Role.CONTROLLER) || user.getRole().equals(Role.DPO)) {
+
+            // Any user can always access their own apps
+            if (apiGeneralController.isAuthenticatedUserId(userId)) {
+                appList = dataBaseService.getUserApps(user);
+            }
+            else if(user.getRole().equals(Role.CONTROLLER) || user.getRole().equals(Role.DPO)) {
                 appList = dataBaseService.getUserApps(user);
             }
             else if(authenticatedUser.getRole().equals(Role.CONTROLLER) || authenticatedUser.getRole().equals(Role.DPO)){
@@ -128,6 +157,40 @@ public class ApiUserController {
             }
             return ResponseEntity.ok(appsArray);
         } catch (IllegalArgumentException e){
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * Get the apps in common between the authenticated user and another user.
+     * RESTRICTIONS: otherUserId MUST be the authenticated user or one of their contacts.
+     * @param otherUserId Id of the other user
+     * @return JSON representing the common apps. Bad request if user does not exist or not authorized.
+     */
+    @GetMapping
+    @RequestMapping("api/user/getCommonApps")
+    public ResponseEntity<?> getCommonApps(@RequestParam() String otherUserId) {
+        try {
+            User authenticatedUser = apiGeneralController.getAuthenicatedUser();
+            User otherUser = apiGeneralController.getUserFromId(otherUserId);
+
+            List<IoTApp> appList;
+            if (otherUser.equals(authenticatedUser)) {
+                appList = dataBaseService.getUserApps(authenticatedUser);
+            } else {
+                List<User> contacts = dataBaseService.getAllContactsFromUser(authenticatedUser);
+                if (!contacts.contains(otherUser)) {
+                    return ResponseEntity.badRequest().body("users must be contacts");
+                }
+                appList = dataBaseService.getAppsFrom2Users(authenticatedUser, otherUser);
+            }
+
+            ArrayNode appsArray = new ObjectMapper().createArrayNode();
+            for (IoTApp app : appList) {
+                appsArray.add(apiGeneralController.createJsonFromApp(app));
+            }
+            return ResponseEntity.ok(appsArray);
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

@@ -1,0 +1,355 @@
+export type QuestionnaireSection = "Personal Data" | "Security" | "Tests and Certifications";
+
+export type QuestionnaireColor = "GREEN" | "ORANGE" | "RED";
+
+export type QuestionnaireVisibilityRule = {
+  dependsOnQuestionId: number;
+  equals: string;
+};
+
+export type QuestionnaireQuestion = {
+  id: number;
+  section: QuestionnaireSection;
+  title: string;
+  options: string[];
+  green: string[];
+  orange: string[];
+  red: string[];
+  optionalTextLabel?: string;
+  visibleIf?: QuestionnaireVisibilityRule;
+};
+
+export const QUESTIONNAIRE_QUESTIONS: QuestionnaireQuestion[] = [
+  {
+    id: 0,
+    section: "Personal Data",
+    title: "Have you identified all the personal data that are going to be processed?",
+    options: ["Yes", "No", "I don't know"],
+    green: ["Yes"],
+    orange: [],
+    red: ["No", "I don't know"],
+  },
+  {
+    id: 1,
+    section: "Personal Data",
+    title:
+      "Are the personal data processed limited and used only for the purposes for which they are processed?",
+    options: ["Yes", "No", "I don't know"],
+    green: ["Yes"],
+    orange: [],
+    red: ["No", "I don't know"],
+    visibleIf: { dependsOnQuestionId: 0, equals: "Yes" },
+  },
+  {
+    id: 2,
+    section: "Personal Data",
+    title: "For how long are the data going to be stored?",
+    options: [
+      "less than 1 month",
+      "between 1 month and 6 months",
+      "between 6 months and 2 years",
+      "more than 2 years",
+      "I don't know",
+    ],
+    green: ["less than 1 month"],
+    orange: ["between 1 month and 6 months", "between 6 months and 2 years"],
+    red: ["more than 2 years", "I don't know"],
+  },
+  {
+    id: 3,
+    section: "Personal Data",
+    title:
+      "Do you have an automatic mechanism that deletes the personal data after the chosen period of time?",
+    options: ["Yes", "No", "I don't know"],
+    green: ["Yes"],
+    orange: [],
+    red: ["No", "I don't know"],
+  },
+  {
+    id: 4,
+    section: "Personal Data",
+    title: "Does the app transfer data to a third party?",
+    options: [
+      "No",
+      "Yes, only in European Union",
+      "Yes, also outside of European Union",
+      "I don't know",
+    ],
+    green: ["No", "Yes, only in European Union"],
+    orange: ["Yes, also outside of European Union"],
+    red: ["I don't know"],
+    optionalTextLabel: "List which third countries, if any",
+  },
+  {
+    id: 5,
+    section: "Personal Data",
+    title:
+      "Does the Commission have decided that these countries have an adequate level of protection?",
+    options: ["Yes, for all of them", "Not for all of them", "For none of them", "I don't know"],
+    green: ["Yes, for all of them"],
+    orange: [],
+    red: ["Not for all of them", "For none of them", "I don't know"],
+    visibleIf: { dependsOnQuestionId: 4, equals: "Yes, also outside of European Union" },
+  },
+  {
+    id: 6,
+    section: "Personal Data",
+    title: "If you use external servers, where are they located?",
+    options: [
+      "I don't use external servers",
+      "They're located only in United Europe",
+      "They're located also outside United Europe",
+      "I don't know",
+    ],
+    green: ["I don't use external servers", "They're located only in United Europe"],
+    orange: [],
+    red: ["They're located also outside United Europe", "I don't know"],
+  },
+  {
+    id: 7,
+    section: "Personal Data",
+    title: "Is there an automated decision-making, including profiling?",
+    options: ["Yes", "No", "I don't know"],
+    green: ["No"],
+    orange: ["Yes"],
+    red: ["I don't know"],
+  },
+  {
+    id: 8,
+    section: "Personal Data",
+    title:
+      "Are the data stored in a way that they're easily accessible to its legitimate owner when needed?",
+    options: ["Yes", "No", "I don't know"],
+    green: ["Yes"],
+    orange: [],
+    red: ["No", "I don't know"],
+  },
+  {
+    id: 9,
+    section: "Security",
+    title: "Do you store passwords in plain text or do you encrypt them?",
+    options: ["I don't store passwords", "I encrypt them", "Plain text", "I don't know"],
+    green: ["I don't store passwords", "I encrypt them"],
+    orange: [],
+    red: ["Plain text", "I don't know"],
+  },
+  {
+    id: 10,
+    section: "Security",
+    title: "Which hash algorithm do you use to encrypt the passwords?",
+    options: ["SHA-3", "SHA-2", "SHA-1", "MD-5", "other"],
+    green: ["SHA-3"],
+    orange: ["SHA-2", "other"],
+    red: ["SHA-1", "MD-5"],
+    optionalTextLabel: "If other, which one?",
+    visibleIf: { dependsOnQuestionId: 9, equals: "I encrypt them" },
+  },
+  {
+    id: 11,
+    section: "Security",
+    title: "Do you have any password constraints?",
+    options: ["Yes", "No", "I don't know"],
+    green: ["Yes"],
+    orange: [],
+    red: ["No", "I don't know"],
+    optionalTextLabel: "List which constraints, if any",
+  },
+  {
+    id: 12,
+    section: "Security",
+    title: "Does your app guarantee confidentiality?",
+    options: ["Yes", "No", "I don't know"],
+    green: ["Yes"],
+    orange: [],
+    red: ["No", "I don't know"],
+    optionalTextLabel: "How do you guarantee it?",
+  },
+  {
+    id: 13,
+    section: "Security",
+    title: "Does your app guarantee integrity?",
+    options: ["Yes", "No", "I don't know"],
+    green: ["Yes"],
+    orange: [],
+    red: ["No", "I don't know"],
+    optionalTextLabel: "How do you guarantee it?",
+  },
+  {
+    id: 14,
+    section: "Security",
+    title: "Do you pseudonymize the personal data?",
+    options: ["Yes", "No", "I don't know"],
+    green: ["Yes"],
+    orange: [],
+    red: ["No", "I don't know"],
+  },
+  {
+    id: 15,
+    section: "Security",
+    title: "Do you encrypt the personal data?",
+    options: ["Yes", "No", "I don't know"],
+    green: ["Yes"],
+    orange: [],
+    red: ["No", "I don't know"],
+  },
+  {
+    id: 16,
+    section: "Security",
+    title: "Which cryptographic protocol are you using for communication?",
+    options: [
+      "My app doesn't need communication",
+      "TLS 1.2 or 1.3",
+      "TLS < 1.2",
+      "SSL",
+      "I don't use any",
+      "I don't know",
+    ],
+    green: ["My app doesn't need communication", "TLS 1.2 or 1.3"],
+    orange: ["TLS < 1.2"],
+    red: ["SSL", "I don't use any", "I don't know"],
+  },
+  {
+    id: 17,
+    section: "Security",
+    title:
+      "Do you limit the communication ports to the strictly necessary? (ex: only port 443 and 80 for https)",
+    options: ["Yes", "No", "I don't know"],
+    green: ["Yes"],
+    orange: [],
+    red: ["No", "I don't know"],
+  },
+  {
+    id: 18,
+    section: "Security",
+    title: "How often do you regularly make backups",
+    options: [
+      "every week",
+      "between a week and a month",
+      "between a month and a year",
+      "more than a year",
+      "never",
+      "I don't know",
+    ],
+    green: ["every week"],
+    orange: ["between a week and a month", "between a month and a year"],
+    red: ["more than a year", "never", "I don't know"],
+  },
+  {
+    id: 19,
+    section: "Security",
+    title:
+      "Have you identified some procedures the availability and access to personal data in case of an incident?",
+    options: ["Yes", "No", "I don't know"],
+    green: ["Yes"],
+    orange: [],
+    red: ["No", "I don't know"],
+  },
+  {
+    id: 20,
+    section: "Tests and Certifications",
+    title:
+      "Did you follow OpenChain specification or other public specification for licensing compliance?",
+    options: ["Yes, OpenChain", "Yes, other", "No", "I don't know"],
+    green: ["Yes, OpenChain", "Yes, other"],
+    orange: ["No", "I don't know"],
+    red: [],
+    optionalTextLabel: "If other, which one?",
+  },
+  {
+    id: 21,
+    section: "Tests and Certifications",
+    title: "Did you perform a Privacy Impact Assessment for at least a standard use case?",
+    options: ["Yes", "No, but it wasn't necessary", "No", "I don't know"],
+    green: ["Yes"],
+    orange: ["No, but it wasn't necessary"],
+    red: ["No", "I don't know"],
+  },
+  {
+    id: 22,
+    section: "Tests and Certifications",
+    title: "Is the Privacy Impact Assessment easily available at request?",
+    options: ["Yes", "No", "I don't know"],
+    green: ["Yes"],
+    orange: [],
+    red: ["No", "I don't know"],
+    visibleIf: { dependsOnQuestionId: 21, equals: "Yes" },
+  },
+  {
+    id: 23,
+    section: "Tests and Certifications",
+    title: "Do you use any static analysis tool for code quality?",
+    options: ["Yes", "No", "I don't know"],
+    green: ["Yes"],
+    orange: ["No", "I don't know"],
+    red: [],
+    optionalTextLabel: "If yes, which tools?",
+  },
+  {
+    id: 24,
+    section: "Tests and Certifications",
+    title: "Do you have any certifications to demonstrate compliance with security requirements?",
+    options: ["Yes", "No", "I don't know"],
+    green: ["Yes"],
+    orange: ["No", "I don't know"],
+    red: [],
+  },
+  {
+    id: 25,
+    section: "Tests and Certifications",
+    title: "Do you use third party libraries?",
+    options: ["Yes", "No", "I don't know"],
+    green: ["Yes", "No"],
+    orange: [],
+    red: ["I don't know"],
+  },
+  {
+    id: 26,
+    section: "Tests and Certifications",
+    title:
+      "Have you checked if these libraries comply with the current regulation about personal data?",
+    options: ["Yes", "No", "I don't know"],
+    green: ["Yes"],
+    orange: [],
+    red: ["No", "I don't know"],
+    visibleIf: { dependsOnQuestionId: 25, equals: "Yes" },
+  },
+  {
+    id: 27,
+    section: "Tests and Certifications",
+    title:
+      "Did you successfully perform any test on the software functionalities (unit test, integration test...)?",
+    options: ["Yes", "No", "I don't know"],
+    green: ["Yes"],
+    orange: [],
+    red: ["No", "I don't know"],
+    optionalTextLabel: "If yes, which tests did you perform?",
+  },
+  {
+    id: 28,
+    section: "Tests and Certifications",
+    title: "Did you perform a code coverage analysis of your test?",
+    options: [
+      "Yes, >=90%",
+      "Yes, >=75% <90%",
+      "Yes, >=50% <75%",
+      "Yes, <50%",
+      "No",
+      "I don't know",
+    ],
+    green: ["Yes, >=90%"],
+    orange: ["Yes, >=75% <90%", "Yes, >=50% <75%"],
+    red: ["Yes, <50%", "No", "I don't know"],
+    visibleIf: { dependsOnQuestionId: 27, equals: "Yes" },
+  },
+  {
+    id: 29,
+    section: "Tests and Certifications",
+    title:
+      "Do you regularly test the effectiveness of your measures for ensuring the security of the process?",
+    options: ["Yes", "No", "I don't know"],
+    green: ["Yes"],
+    orange: [],
+    red: ["No", "I don't know"],
+  },
+];
+

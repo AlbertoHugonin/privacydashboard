@@ -74,7 +74,9 @@ public class SecurityConfiguration extends VaadinWebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class) // Add custom JWT filter before the UsernamePasswordAuthenticationFilter
-                .authorizeRequests().antMatchers("/api/**").authenticated()
+                .authorizeRequests()
+                .antMatchers("/react/**").permitAll()
+                .antMatchers("/api/**").authenticated()
                 .and().httpBasic();
         super.configure(http);
         setLoginView(http, LoginView.class, LOGOUT_URL);

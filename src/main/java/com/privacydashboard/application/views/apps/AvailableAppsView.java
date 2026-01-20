@@ -13,6 +13,9 @@ import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.progressbar.ProgressBar;
+import com.vaadin.flow.component.virtuallist.VirtualList;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -24,6 +27,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import javax.annotation.security.PermitAll;
 
@@ -72,6 +77,8 @@ public class AvailableAppsView extends Div {
             URL url = new URL("http://yggio.sifis-home.eu:3030");
 
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setConnectTimeout(5000);
+            connection.setReadTimeout(5000);
             connection.setRequestMethod("GET");
             int responseCode = connection.getResponseCode();
 
@@ -90,6 +97,7 @@ public class AvailableAppsView extends Div {
             else{
                 System.out.println("GET Request failed code: "+responseCode);
             }
+            connection.disconnect();
 
             JsonNode json = new ObjectMapper().readTree(new StringReader(responseString));
             int size = json.get("packages").size();
@@ -360,25 +368,63 @@ public class AvailableAppsView extends Div {
         addClassName("grid-view");
         VerticalLayout appLayout = new VerticalLayout();
 
-        try{
-           
-            List<IoTApp> apps = getJsonAppsFromUrl();
-            for (IoTApp app : apps) {
-                appLayout.add(createApp(app));
-            }
-        }
-        catch(Exception e){
-            System.out.println("Exception: "+e);
-            Span exNotice = new Span();
-            if(e.getMessage() == "Size was 0"){
-                exNotice.add("There are no available apps.");
-            }
-            else{
-                exNotice.add("We could not retrieve the available apps.");
-            }
-            exNotice.addClassName("bold");
-            appLayout.add(exNotice);
-        }
+        Span loadingText = new Span("Loading available apps…");
+        loadingText.addClassName("bold");
+        ProgressBar progressBar = new ProgressBar();
+        progressBar.setIndeterminate(true);
+        appLayout.add(loadingText, progressBar);
+
+        UI ui = UI.getCurrent();
+        int previousPollInterval = ui.getPollInterval();
+        ui.setPollInterval(500);
+
+        CompletableFuture
+                .supplyAsync(() -> {
+                    try {
+                        return getJsonAppsFromUrl();
+                    } catch (Exception e) {
+                        throw new CompletionException(e);
+                    }
+                })
+                .whenComplete((apps, throwable) -> {
+                    try {
+                        ui.access(() -> {
+                            ui.setPollInterval(previousPollInterval);
+                            if (!appLayout.isAttached()) {
+                                return;
+                            }
+                            appLayout.removeAll();
+                            if (throwable != null) {
+                                String message = throwable.getCause() != null
+                                        ? throwable.getCause().getMessage()
+                                        : throwable.getMessage();
+                                Span exNotice = new Span();
+                                if ("Size was 0".equals(message)) {
+                                    exNotice.add("There are no available apps.");
+                                } else {
+                                    exNotice.add("We could not retrieve the available apps.");
+                                }
+                                exNotice.addClassName("bold");
+                                appLayout.add(exNotice);
+                                return;
+                            }
+
+                            if (apps == null || apps.isEmpty()) {
+                                Span exNotice = new Span("There are no available apps.");
+                                exNotice.addClassName("bold");
+                                appLayout.add(exNotice);
+                                return;
+                            }
+
+                            VirtualList<IoTApp> list = new VirtualList<>();
+                            list.setItems(apps);
+                            list.setRenderer(new ComponentRenderer<>(this::createApp));
+                            appLayout.add(list);
+                        });
+                    } catch (Exception ignored) {
+                        // UI might be detached if the user navigated away before loading completed.
+                    }
+                });
 
         add(appLayout);
     }

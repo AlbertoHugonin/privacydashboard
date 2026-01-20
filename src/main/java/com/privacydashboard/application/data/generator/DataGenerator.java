@@ -244,7 +244,7 @@ public class DataGenerator {
                 controllers[j]=new User();
                 controllers[j].setRole(Role.CONTROLLER);
                 controllers[j].setName(names2[j]);
-                controllers[j].setHashedPassword(names2[j]);
+                controllers[j].setHashedPassword(passwordEncoder.encode(names2[j]));
                 controllers[j].setMail(names2[j].replaceAll("\\s","") + "@protonmail.com");
                 userRepository.save(controllers[j]);
 
@@ -262,7 +262,7 @@ public class DataGenerator {
                 dpos[j]=new User();
                 dpos[j].setRole(Role.DPO);
                 dpos[j].setName(names3[j]);
-                dpos[j].setHashedPassword(names3[j]);
+                dpos[j].setHashedPassword(passwordEncoder.encode(names3[j]));
                 dpos[j].setMail(names3[j].replaceAll("\\s","") + "@protonmail.com");
                 userRepository.save(dpos[j]);
 

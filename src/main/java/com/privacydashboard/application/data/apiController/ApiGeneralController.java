@@ -271,6 +271,14 @@ public class ApiGeneralController {
             }
             appJson.set("optionalAnswers", optionalAnswersArray);
         }
+
+        if (app.getConsenses() != null) {
+            ArrayNode consensesArray = mapper.createArrayNode();
+            for (String consens : app.getConsenses()) {
+                consensesArray.add(consens);
+            }
+            appJson.set("consenses", consensesArray);
+        }
         return appJson;
     }
 
@@ -344,7 +352,7 @@ public class ApiGeneralController {
                 String[] detailVoteArray = new String[GlobalVariables.nQuestions];
                 int i = 0;
                 for (JsonNode singleAnswer : detailVote) {
-                    detailVoteArray[i] = singleAnswer.asText();
+                    detailVoteArray[i] = singleAnswer.isNull() ? null : singleAnswer.asText();
                     i++;
                     if (i >= GlobalVariables.nQuestions) {
                         break;
@@ -365,7 +373,9 @@ public class ApiGeneralController {
                 Hashtable<Integer, String> optionalAnswersHash = new Hashtable<>();
                 int i = 0;
                 for (JsonNode singleAnswer : optionalAnswers) {
-                    optionalAnswersHash.put(i, singleAnswer.asText());
+                    if (!singleAnswer.isNull()) {
+                        optionalAnswersHash.put(i, singleAnswer.asText());
+                    }
                     i++;
                     if (i >= GlobalVariables.nQuestions) {
                         break;
