@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet } from "react-router-dom";
 import { apiJson } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import { UserMenu } from "./UserMenu";
 import type { Notification } from "../types/api";
 
 export function AppShell() {
   const auth = useAuth();
-  const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
 
   const navLinkClassName = ({ isActive }: { isActive: boolean }) =>
@@ -32,11 +32,6 @@ export function AppShell() {
     };
     void loadUnread();
   }, [auth.user]);
-
-  const handleLogout = async () => {
-    await auth.logout();
-    navigate("/login", { replace: true });
-  };
 
   return (
     <>
@@ -71,10 +66,7 @@ export function AppShell() {
             ) : null}
           </nav>
           <div className="userbox">
-            <span className="muted">{auth.user?.name}</span>
-            <button className="btn" onClick={handleLogout} type="button">
-              Logout
-            </button>
+            <UserMenu />
           </div>
         </div>
       </header>

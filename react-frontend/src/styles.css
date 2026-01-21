@@ -96,8 +96,89 @@ button {
   border-color: #2b6fff;
 }
 
+.btn-danger {
+  background: rgba(255, 107, 107, 0.16);
+  border-color: rgba(255, 107, 107, 0.65);
+}
+
 .muted {
   color: rgba(231, 238, 252, 0.75);
+}
+
+.user-menu {
+  position: relative;
+}
+
+.user-menu-button {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  padding: 6px 10px 6px 6px;
+  border-radius: 999px;
+}
+
+.user-menu-button:focus-visible {
+  outline: 2px solid #2b6fff;
+  outline-offset: 2px;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  background: rgba(43, 111, 255, 0.22);
+  border: 1px solid rgba(43, 111, 255, 0.7);
+}
+
+.user-menu-caret {
+  opacity: 0.8;
+}
+
+.user-menu-popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  width: 320px;
+  max-width: calc(100vw - 48px);
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(11, 18, 32, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 14px 50px rgba(0, 0, 0, 0.45);
+}
+
+.user-menu-title {
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.user-menu-grid {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.user-menu-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.user-menu-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 12px;
 }
 
 .grid {
