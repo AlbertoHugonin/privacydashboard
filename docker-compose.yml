@@ -11,4 +11,6 @@ services:
       PORT: "8020"
       VAADIN_LAUNCH_BROWSER: "false"
       SERVER_FORWARD_HEADERS_STRATEGY: "framework"
+      PRIVACYDASHBOARD_YGGIO_AUTH_ENABLED: "false"
+      PRIVACYDASHBOARD_YGGIO_AUTH_TIMEOUT_MS: "2000"
     restart: unless-stopped

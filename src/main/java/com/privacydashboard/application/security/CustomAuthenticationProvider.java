@@ -16,9 +16,12 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
 import java.security.KeyFactory;
 import java.security.PublicKey;
@@ -32,12 +35,32 @@ import java.util.Map;
 public class CustomAuthenticationProvider implements AuthenticationProvider {
 
 
-    private RestTemplate restTemplate = new RestTemplate();
+    private RestTemplate restTemplate;
+
+    @Value("${privacydashboard.yggio.auth.enabled:false}")
+    private boolean yggioAuthEnabled;
+
+    @Value("${privacydashboard.yggio.auth.url:https://yggio.sifis-home.eu/api/auth/local}")
+    private String yggioAuthUrl;
+
+    @Value("${privacydashboard.yggio.auth.timeout-ms:2000}")
+    private int yggioAuthTimeoutMs;
+
     @Autowired
     UserDetailsServiceImpl userProvider;
 
     private UserDetails user;
     private String userNameToken;
+    
+    @javax.annotation.PostConstruct
+    public void init() {
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        // Avoid hanging the whole login flow when the external service is offline.
+        requestFactory.setConnectTimeout(yggioAuthTimeoutMs);
+        requestFactory.setReadTimeout(yggioAuthTimeoutMs);
+        this.restTemplate = new RestTemplate(requestFactory);
+    }
+
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String username = authentication.getName();
@@ -47,12 +70,14 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             return new UsernamePasswordAuthenticationToken(username, password, userProvider.getAuthoritiesByUser(userProvider.loadUser(username)));
         }
 
-        try {
-            if (tokenauth(username, password)) {
-                return new UsernamePasswordAuthenticationToken(userNameToken, password, userProvider.getAuthoritiesByUser(userProvider.loadUser(userNameToken)));
+        if (yggioAuthEnabled) {
+            try {
+                if (tokenauth(username, password)) {
+                    return new UsernamePasswordAuthenticationToken(userNameToken, password, userProvider.getAuthoritiesByUser(userProvider.loadUser(userNameToken)));
+                }
+            } catch (Exception ignored) {
+                // Fall through and fail with bad credentials.
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
         throw new BadCredentialsException("Authentication failed");
     }
@@ -71,8 +96,6 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
     private boolean tokenauth(String username, String password) {
         User res = null;
-        RestTemplate restTemplate = new RestTemplate();
-
         Map<String, String> params = new HashMap<>();
         params.put("username", username);
         params.put("password", password);
@@ -83,7 +106,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         try {
 
             response = restTemplate.postForObject(
-                    "https://yggio.sifis-home.eu/api/auth/local",
+                    yggioAuthUrl,
                     params,
                     String.class
             );
@@ -119,6 +142,8 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
         } catch (HttpClientErrorException e) {
             System.err.println("401");
+        } catch (ResourceAccessException e) {
+            // Timeout / connection refused when Yggio is offline.
         }
         catch (Exception e) {
             e.printStackTrace();
