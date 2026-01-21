@@ -50,8 +50,12 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 @EnableWebSecurity
 @Configuration
@@ -70,6 +74,20 @@ public class SecurityConfiguration extends VaadinWebSecurityConfigurerAdapter {
         return new JWTAuthenticationFilter();
     }
 
+    @Bean
+    public RequestCache requestCache() {
+        return new HttpSessionRequestCache() {
+            @Override
+            public void saveRequest(HttpServletRequest request, HttpServletResponse response) {
+                String path = request.getRequestURI();
+                if (path != null && path.startsWith("/api/")) {
+                    return;
+                }
+                super.saveRequest(request, response);
+            }
+        };
+    }
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
@@ -80,6 +98,7 @@ public class SecurityConfiguration extends VaadinWebSecurityConfigurerAdapter {
                 .and().httpBasic();
         super.configure(http);
         setLoginView(http, LoginView.class, LOGOUT_URL);
+        http.requestCache().requestCache(requestCache());
     }
 
     @Override
