@@ -88,7 +88,7 @@ export function ContactsPage() {
       {loading ? <div className="card">Loading…</div> : null}
       {error ? <div className="card error">{error}</div> : null}
       {!loading && !error ? (
-        <div className="list">
+        <div className="stack">
           <div className="card">
             <label className="field">
               <span>Search</span>
@@ -100,60 +100,66 @@ export function ContactsPage() {
             </label>
           </div>
 
-          {filteredContacts.length === 0 ? (
-            <div className="card muted">No contacts.</div>
+          {filteredContacts.length === 0 ? <div className="card muted">No contacts.</div> : null}
+
+          {filteredContacts.length ? (
+            <div className="cards-grid">
+              {filteredContacts.map((contact) => (
+                <details
+                  className="card details"
+                  key={contact.id}
+                  onToggle={(event) => {
+                    if ((event.currentTarget as HTMLDetailsElement).open) {
+                      void loadApps(contact.id);
+                    }
+                  }}
+                >
+                  <summary className="list-item">
+                    <div>
+                      <div>
+                        <strong>{contact.name}</strong>{" "}
+                        <span className="muted">({contact.role})</span>
+                      </div>
+                      {contact.mail ? <div className="muted">{contact.mail}</div> : null}
+                    </div>
+                    <Link
+                      className="btn btn-primary"
+                      to={`/messages?contactId=${encodeURIComponent(contact.id)}`}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Message
+                    </Link>
+                  </summary>
+
+                  <div className="details-body">
+                    <strong>Apps in common</strong>
+                    {appsLoadingByContactId[contact.id] ? (
+                      <div className="muted">Loading apps…</div>
+                    ) : null}
+                    {appsErrorByContactId[contact.id] ? (
+                      <div className="error">{appsErrorByContactId[contact.id]}</div>
+                    ) : null}
+                    {appsByContactId[contact.id] && appsByContactId[contact.id]?.length === 0 ? (
+                      <div className="muted">No apps in common.</div>
+                    ) : null}
+                    {appsByContactId[contact.id] && appsByContactId[contact.id]?.length ? (
+                      <div className="chips">
+                        {appsByContactId[contact.id]?.map((app) => (
+                          <Link
+                            className="chip"
+                            key={app.id}
+                            to={`/apps?appId=${encodeURIComponent(app.id)}`}
+                          >
+                            {app.name}
+                          </Link>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                </details>
+              ))}
+            </div>
           ) : null}
-
-          {filteredContacts.map((contact) => (
-            <details
-              className="card details"
-              key={contact.id}
-              onToggle={(event) => {
-                if ((event.currentTarget as HTMLDetailsElement).open) {
-                  void loadApps(contact.id);
-                }
-              }}
-            >
-              <summary className="list-item">
-                <div>
-                  <div>
-                    <strong>{contact.name}</strong>{" "}
-                    <span className="muted">({contact.role})</span>
-                  </div>
-                  {contact.mail ? <div className="muted">{contact.mail}</div> : null}
-                </div>
-                <Link className="btn" to={`/messages?contactId=${encodeURIComponent(contact.id)}`}>
-                  Message
-                </Link>
-              </summary>
-
-              <div className="details-body">
-                <strong>Apps in common</strong>
-                {appsLoadingByContactId[contact.id] ? (
-                  <div className="muted">Loading apps…</div>
-                ) : null}
-                {appsErrorByContactId[contact.id] ? (
-                  <div className="error">{appsErrorByContactId[contact.id]}</div>
-                ) : null}
-                {appsByContactId[contact.id] && appsByContactId[contact.id]?.length === 0 ? (
-                  <div className="muted">No apps in common.</div>
-                ) : null}
-                {appsByContactId[contact.id] && appsByContactId[contact.id]?.length ? (
-                  <div className="list">
-                    {appsByContactId[contact.id]?.map((app) => (
-                      <Link
-                        className="btn"
-                        key={app.id}
-                        to={`/apps?appId=${encodeURIComponent(app.id)}`}
-                      >
-                        {app.name}
-                      </Link>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            </details>
-          ))}
         </div>
       ) : null}
     </div>

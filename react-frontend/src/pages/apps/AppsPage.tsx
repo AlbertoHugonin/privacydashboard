@@ -265,7 +265,7 @@ export function AppsPage() {
       {loading ? <div className="card">Loading…</div> : null}
       {error ? <div className="card error">{error}</div> : null}
       {!loading && !error ? (
-        <div className="list">
+        <div className="stack">
           <div className="card">
             <label className="field">
               <span>Search</span>
@@ -279,195 +279,197 @@ export function AppsPage() {
 
           {filteredApps.length === 0 ? <div className="card muted">No apps.</div> : null}
 
-          {filteredApps.map((app) => {
-            const people = appPeopleByAppId[app.id] ?? {};
-            const acceptedConsenses = new Set(people.relation?.consenses ?? []);
-            const appConsenses = app.consenses ?? [];
+          {filteredApps.length ? (
+            <div className="cards-grid">
+              {filteredApps.map((app) => {
+                const people = appPeopleByAppId[app.id] ?? {};
+                const acceptedConsenses = new Set(people.relation?.consenses ?? []);
+                const appConsenses = app.consenses ?? [];
 
-            return (
-              <details
-                className="card details"
-                key={app.id}
-                open={openAppId === app.id}
-                onToggle={(event) => {
-                  const isOpen = (event.currentTarget as HTMLDetailsElement).open;
-                  setOpenAppId(isOpen ? app.id : null);
-                  if (isOpen) {
-                    void loadPeople(app);
-                  }
-                }}
-              >
-                <summary className="list-item">
-                  <div>
-                    <div>
-                      <strong>{app.name}</strong>{" "}
-                      {app.questionnaireVote ? (
-                        <span className="muted">({app.questionnaireVote})</span>
-                      ) : (
-                        <span className="muted">(no vote)</span>
-                      )}
-                    </div>
-                    {app.description ? <div className="muted">{app.description}</div> : null}
-                  </div>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <Link
-                      className="btn"
-                      to={`/privacy-notice?appId=${encodeURIComponent(app.id)}`}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Privacy Notice
-                    </Link>
-                    <Link
-                      className="btn"
-                      to={`/rights?appId=${encodeURIComponent(app.id)}`}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      GDPR Rights
-                    </Link>
-                    {canSeeSubjects ? (
-                      <Link
-                        className="btn"
-                        to={`/questionnaire?appId=${encodeURIComponent(app.id)}`}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Questionnaire
-                      </Link>
-                    ) : null}
-                  </div>
-                </summary>
-
-                <div className="details-body">
-                  {people.loading ? <div className="muted">Loading…</div> : null}
-                  {people.error ? <div className="error">{people.error}</div> : null}
-
-                  <div className="grid">
-                    <div className="card">
-                      <strong>Controllers</strong>
-                      <div style={{ height: 8 }} />
-                      {people.controllers?.length ? (
-                        <div className="list">
-                          {people.controllers
-                            .filter((u) => u.id !== auth.user?.id)
-                            .map((contact) => (
-                              <Link
-                                className="btn"
-                                key={contact.id}
-                                to={`/messages?contactId=${encodeURIComponent(contact.id)}`}
-                              >
-                                {contact.name}
-                              </Link>
-                            ))}
+                return (
+                  <details
+                    className="card details"
+                    key={app.id}
+                    open={openAppId === app.id}
+                    onToggle={(event) => {
+                      const isOpen = (event.currentTarget as HTMLDetailsElement).open;
+                      setOpenAppId(isOpen ? app.id : null);
+                      if (isOpen) {
+                        void loadPeople(app);
+                      }
+                    }}
+                  >
+                    <summary className="list-item">
+                      <div>
+                        <div>
+                          <strong>{app.name}</strong>{" "}
+                          {app.questionnaireVote ? (
+                            <span className="muted">({app.questionnaireVote})</span>
+                          ) : (
+                            <span className="muted">(no vote)</span>
+                          )}
                         </div>
-                      ) : (
-                        <div className="muted">—</div>
-                      )}
-                    </div>
-
-                    <div className="card">
-                      <strong>DPOs</strong>
-                      <div style={{ height: 8 }} />
-                      {people.dpos?.length ? (
-                        <div className="list">
-                          {people.dpos
-                            .filter((u) => u.id !== auth.user?.id)
-                            .map((contact) => (
-                              <Link
-                                className="btn"
-                                key={contact.id}
-                                to={`/messages?contactId=${encodeURIComponent(contact.id)}`}
-                              >
-                                {contact.name}
-                              </Link>
-                            ))}
-                        </div>
-                      ) : (
-                        <div className="muted">—</div>
-                      )}
-                    </div>
-
-                    {canSeeSubjects ? (
-                      <div className="card">
-                        <strong>Subjects</strong>
-                        <div style={{ height: 8 }} />
-                        {people.subjects?.length ? (
-                          <div className="list">
-                            {people.subjects
-                              .filter((u) => u.id !== auth.user?.id)
-                              .map((contact) => (
-                                <Link
-                                  className="btn"
-                                  key={contact.id}
-                                  to={`/messages?contactId=${encodeURIComponent(contact.id)}`}
-                                >
-                                  {contact.name}
-                                </Link>
-                              ))}
-                          </div>
-                        ) : (
-                          <div className="muted">—</div>
-                        )}
+                        {app.description ? <div className="muted">{app.description}</div> : null}
                       </div>
-                    ) : null}
-                  </div>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <Link
+                          className="btn"
+                          to={`/privacy-notice?appId=${encodeURIComponent(app.id)}`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Privacy Notice
+                        </Link>
+                        <Link
+                          className="btn"
+                          to={`/rights?appId=${encodeURIComponent(app.id)}`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          GDPR Rights
+                        </Link>
+                        {canSeeSubjects ? (
+                          <Link
+                            className="btn"
+                            to={`/questionnaire?appId=${encodeURIComponent(app.id)}`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Questionnaire
+                          </Link>
+                        ) : null}
+                      </div>
+                    </summary>
 
-                  {isSubject ? (
-                    <div className="card">
-                      <strong>Consenses</strong>
-                      <div style={{ height: 10 }} />
-                      {appConsenses.length === 0 ? (
-                        <div className="muted">No consenses defined for this app.</div>
-                      ) : null}
+                    <div className="details-body">
+                      {people.loading ? <div className="muted">Loading…</div> : null}
+                      {people.error ? <div className="error">{people.error}</div> : null}
 
-                      {appConsenses.length > 0 ? (
-                        <div className="list">
-                          {appConsenses.map((consent) => {
-                            const accepted = acceptedConsenses.has(consent);
-                            const busy = people.updatingConsent === consent;
-                            return (
-                              <div className="list-item" key={consent}>
-                                <div>{consent}</div>
-                                <button
-                                  className="btn"
-                                  type="button"
-                                  disabled={busy || people.updatingAllConsents || people.removingEverything}
-                                  onClick={() => void updateConsent(app, consent, accepted ? "withdraw" : "accept")}
-                                >
-                                  {busy
-                                    ? "Updating…"
-                                    : accepted
-                                      ? "Withdraw"
-                                      : "Accept"}
-                                </button>
+                      <div className="grid">
+                        <div className="card">
+                          <strong>Controllers</strong>
+                          <div style={{ height: 8 }} />
+                          {people.controllers?.length ? (
+                            <div className="chips">
+                              {people.controllers
+                                .filter((u) => u.id !== auth.user?.id)
+                                .map((contact) => (
+                                  <Link
+                                    className="chip"
+                                    key={contact.id}
+                                    to={`/messages?contactId=${encodeURIComponent(contact.id)}`}
+                                  >
+                                    {contact.name}
+                                  </Link>
+                                ))}
+                            </div>
+                          ) : (
+                            <div className="muted">—</div>
+                          )}
+                        </div>
+
+                        <div className="card">
+                          <strong>DPOs</strong>
+                          <div style={{ height: 8 }} />
+                          {people.dpos?.length ? (
+                            <div className="chips">
+                              {people.dpos
+                                .filter((u) => u.id !== auth.user?.id)
+                                .map((contact) => (
+                                  <Link
+                                    className="chip"
+                                    key={contact.id}
+                                    to={`/messages?contactId=${encodeURIComponent(contact.id)}`}
+                                  >
+                                    {contact.name}
+                                  </Link>
+                                ))}
+                            </div>
+                          ) : (
+                            <div className="muted">—</div>
+                          )}
+                        </div>
+
+                        {canSeeSubjects ? (
+                          <div className="card">
+                            <strong>Subjects</strong>
+                            <div style={{ height: 8 }} />
+                            {people.subjects?.length ? (
+                              <div className="chips">
+                                {people.subjects
+                                  .filter((u) => u.id !== auth.user?.id)
+                                  .map((contact) => (
+                                    <Link
+                                      className="chip"
+                                      key={contact.id}
+                                      to={`/messages?contactId=${encodeURIComponent(contact.id)}`}
+                                    >
+                                      {contact.name}
+                                    </Link>
+                                  ))}
                               </div>
-                            );
-                          })}
+                            ) : (
+                              <div className="muted">—</div>
+                            )}
+                          </div>
+                        ) : null}
+                      </div>
 
+                      {isSubject ? (
+                        <div className="card">
+                          <strong>Consenses</strong>
+                          <div style={{ height: 10 }} />
+                          {appConsenses.length === 0 ? (
+                            <div className="muted">No consenses defined for this app.</div>
+                          ) : null}
+
+                          {appConsenses.length > 0 ? (
+                            <div className="list">
+                              {appConsenses.map((consent) => {
+                                const accepted = acceptedConsenses.has(consent);
+                                const busy = people.updatingConsent === consent;
+                                return (
+                                  <div className="list-item" key={consent}>
+                                    <div>{consent}</div>
+                                    <button
+                                      className="btn"
+                                      type="button"
+                                      disabled={busy || people.updatingAllConsents || people.removingEverything}
+                                      onClick={() =>
+                                        void updateConsent(app, consent, accepted ? "withdraw" : "accept")
+                                      }
+                                    >
+                                      {busy ? "Updating…" : accepted ? "Withdraw" : "Accept"}
+                                    </button>
+                                  </div>
+                                );
+                              })}
+
+                              <button
+                                className="btn"
+                                type="button"
+                                disabled={people.updatingAllConsents || !!people.updatingConsent}
+                                onClick={() => void withdrawAllConsents(app)}
+                              >
+                                {people.updatingAllConsents ? "Withdrawing…" : "Withdraw all"}
+                              </button>
+                            </div>
+                          ) : null}
+
+                          <div style={{ height: 10 }} />
                           <button
                             className="btn"
                             type="button"
-                            disabled={people.updatingAllConsents || !!people.updatingConsent}
-                            onClick={() => void withdrawAllConsents(app)}
+                            disabled={people.removingEverything}
+                            onClick={() => void removeEverything(app)}
                           >
-                            {people.updatingAllConsents ? "Withdrawing…" : "Withdraw all"}
+                            {people.removingEverything ? "Sending…" : "Remove everything"}
                           </button>
                         </div>
                       ) : null}
-
-                      <div style={{ height: 10 }} />
-                      <button
-                        className="btn"
-                        type="button"
-                        disabled={people.removingEverything}
-                        onClick={() => void removeEverything(app)}
-                      >
-                        {people.removingEverything ? "Sending…" : "Remove everything"}
-                      </button>
                     </div>
-                  ) : null}
-                </div>
-              </details>
-            );
-          })}
+                  </details>
+                );
+              })}
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>
