@@ -8,6 +8,7 @@ export function ContactsPage() {
   const auth = useAuth();
   const [contacts, setContacts] = useState<UserSummary[]>([]);
   const [query, setQuery] = useState("");
+  const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [appsByContactId, setAppsByContactId] = useState<Record<string, IoTApp[] | undefined>>(
     {},
   );
@@ -82,69 +83,122 @@ export function ContactsPage() {
     }
   };
 
+  const selectedContact = useMemo(() => {
+    if (!selectedContactId) {
+      return null;
+    }
+    return contacts.find((contact) => contact.id === selectedContactId) ?? null;
+  }, [contacts, selectedContactId]);
+
+  const selectedApps = selectedContactId ? appsByContactId[selectedContactId] : undefined;
+  const selectedAppsLoading = selectedContactId
+    ? !!appsLoadingByContactId[selectedContactId]
+    : false;
+  const selectedAppsError = selectedContactId ? appsErrorByContactId[selectedContactId] : undefined;
+
+  const selectContact = (contactId: string) => {
+    setSelectedContactId(contactId);
+    void loadApps(contactId);
+  };
+
   return (
     <div className="container">
       <h1>Contacts</h1>
       {loading ? <div className="card">Loading…</div> : null}
       {error ? <div className="card error">{error}</div> : null}
       {!loading && !error ? (
-        <div className="stack">
-          <div className="card">
-            <label className="field">
-              <span>Search</span>
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Name, role, mail…"
-              />
-            </label>
-          </div>
+        <div className="master-detail">
+          <div className="stack">
+            <div className="card">
+              <label className="field">
+                <span>Search</span>
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Name, role, mail…"
+                />
+              </label>
+            </div>
 
-          {filteredContacts.length === 0 ? <div className="card muted">No contacts.</div> : null}
-
-          {filteredContacts.length ? (
-            <div className="cards-grid">
-              {filteredContacts.map((contact) => (
-                <details
-                  className="card details"
-                  key={contact.id}
-                  onToggle={(event) => {
-                    if ((event.currentTarget as HTMLDetailsElement).open) {
-                      void loadApps(contact.id);
-                    }
-                  }}
-                >
-                  <summary className="list-item">
-                    <div>
+            {filteredContacts.length === 0 ? (
+              <div className="card muted">No contacts.</div>
+            ) : (
+              <div className="cards-grid">
+                {filteredContacts.map((contact) => {
+                  const selected = contact.id === selectedContactId;
+                  return (
+                    <button
+                      className={`card card-button${selected ? " selected" : ""}`}
+                      key={contact.id}
+                      onClick={() => {
+                        if (selected) {
+                          setSelectedContactId(null);
+                          return;
+                        }
+                        selectContact(contact.id);
+                      }}
+                      type="button"
+                    >
                       <div>
                         <strong>{contact.name}</strong>{" "}
                         <span className="muted">({contact.role})</span>
                       </div>
                       {contact.mail ? <div className="muted">{contact.mail}</div> : null}
-                    </div>
-                    <Link
-                      className="btn btn-primary"
-                      to={`/messages?contactId=${encodeURIComponent(contact.id)}`}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Message
-                    </Link>
-                  </summary>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
-                  <div className="details-body">
+          <aside className="side-panel">
+            <div className="card side-panel-card">
+              {!selectedContact ? (
+                <div className="muted">Select a contact to see details.</div>
+              ) : (
+                <div className="stack">
+                  <div className="panel-header">
+                    <div>
+                      <h2 style={{ margin: 0 }}>{selectedContact.name}</h2>
+                      <div className="muted">{selectedContact.role}</div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button
+                        className="btn"
+                        onClick={() => setSelectedContactId(null)}
+                        type="button"
+                      >
+                        Close
+                      </button>
+                      <Link
+                        className="btn btn-primary"
+                        to={`/messages?contactId=${encodeURIComponent(selectedContact.id)}`}
+                      >
+                        Message
+                      </Link>
+                    </div>
+                  </div>
+
+                  {selectedContact.mail ? (
+                    <div className="kv-grid">
+                      <div className="kv-row">
+                        <span className="muted">Email</span>
+                        <span>{selectedContact.mail}</span>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <div>
                     <strong>Apps in common</strong>
-                    {appsLoadingByContactId[contact.id] ? (
-                      <div className="muted">Loading apps…</div>
-                    ) : null}
-                    {appsErrorByContactId[contact.id] ? (
-                      <div className="error">{appsErrorByContactId[contact.id]}</div>
-                    ) : null}
-                    {appsByContactId[contact.id] && appsByContactId[contact.id]?.length === 0 ? (
+                    <div style={{ height: 10 }} />
+                    {selectedAppsLoading ? <div className="muted">Loading apps…</div> : null}
+                    {selectedAppsError ? <div className="error">{selectedAppsError}</div> : null}
+                    {selectedApps && selectedApps.length === 0 ? (
                       <div className="muted">No apps in common.</div>
                     ) : null}
-                    {appsByContactId[contact.id] && appsByContactId[contact.id]?.length ? (
+                    {selectedApps && selectedApps.length ? (
                       <div className="chips">
-                        {appsByContactId[contact.id]?.map((app) => (
+                        {selectedApps.map((app) => (
                           <Link
                             className="chip"
                             key={app.id}
@@ -156,10 +210,10 @@ export function ContactsPage() {
                       </div>
                     ) : null}
                   </div>
-                </details>
-              ))}
+                </div>
+              )}
             </div>
-          ) : null}
+          </aside>
         </div>
       ) : null}
     </div>

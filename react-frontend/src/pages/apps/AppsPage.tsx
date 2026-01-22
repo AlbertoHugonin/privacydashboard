@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { apiJson, apiPostJson, apiText } from "../../api/client";
 import { useAuth } from "../../auth/AuthContext";
 import type { IoTApp, UserAppRelation, UserSummary } from "../../types/api";
@@ -19,7 +18,7 @@ type AppPeople = {
 
 export function AppsPage() {
   const auth = useAuth();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const openAppIdFromUrl = searchParams.get("appId");
   const [apps, setApps] = useState<IoTApp[]>([]);
   const [query, setQuery] = useState("");
@@ -68,6 +67,13 @@ export function AppsPage() {
       );
     });
   }, [apps, query]);
+
+  const selectedApp = useMemo(() => {
+    if (!openAppId) {
+      return null;
+    }
+    return apps.find((app) => app.id === openAppId) ?? null;
+  }, [apps, openAppId]);
 
   const loadPeople = async (app: IoTApp) => {
     if (!auth.user) {
@@ -126,6 +132,35 @@ export function AppsPage() {
       }));
     }
   };
+
+  const selectApp = (app: IoTApp) => {
+    setOpenAppId(app.id);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("appId", app.id);
+      return next;
+    });
+    void loadPeople(app);
+  };
+
+  const closePanel = () => {
+    setOpenAppId(null);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete("appId");
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (openAppIdFromUrl) {
+      const app = apps.find((candidate) => candidate.id === openAppIdFromUrl);
+      if (app) {
+        void loadPeople(app);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openAppIdFromUrl, apps, auth.user]);
 
   const reloadRelation = async (appId: string) => {
     if (!auth.user) {
@@ -265,80 +300,107 @@ export function AppsPage() {
       {loading ? <div className="card">Loading…</div> : null}
       {error ? <div className="card error">{error}</div> : null}
       {!loading && !error ? (
-        <div className="stack">
-          <div className="card">
-            <label className="field">
-              <span>Search</span>
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Name, description…"
-              />
-            </label>
+        <div className="master-detail">
+          <div className="stack">
+            <div className="card">
+              <label className="field">
+                <span>Search</span>
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Name, description…"
+                />
+              </label>
+            </div>
+
+            {filteredApps.length === 0 ? <div className="card muted">No apps.</div> : null}
+
+            {filteredApps.length ? (
+              <div className="cards-grid">
+                {filteredApps.map((app) => {
+                  const selected = app.id === openAppId;
+                  return (
+                    <button
+                      className={`card card-button${selected ? " selected" : ""}`}
+                      key={app.id}
+                      onClick={() => {
+                        if (selected) {
+                          closePanel();
+                          return;
+                        }
+                        selectApp(app);
+                      }}
+                      type="button"
+                    >
+                      <div>
+                        <strong>{app.name}</strong>{" "}
+                        {app.questionnaireVote ? (
+                          <span className="muted">({app.questionnaireVote})</span>
+                        ) : (
+                          <span className="muted">(no vote)</span>
+                        )}
+                      </div>
+                      {app.description ? <div className="muted">{app.description}</div> : null}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
           </div>
 
-          {filteredApps.length === 0 ? <div className="card muted">No apps.</div> : null}
+          <aside className="side-panel">
+            <div className="card side-panel-card">
+              {!selectedApp ? (
+                <div className="muted">Select an app to see details.</div>
+              ) : (
+                (() => {
+                  const people = appPeopleByAppId[selectedApp.id] ?? {};
+                  const acceptedConsenses = new Set(people.relation?.consenses ?? []);
+                  const appConsenses = selectedApp.consenses ?? [];
 
-          {filteredApps.length ? (
-            <div className="cards-grid">
-              {filteredApps.map((app) => {
-                const people = appPeopleByAppId[app.id] ?? {};
-                const acceptedConsenses = new Set(people.relation?.consenses ?? []);
-                const appConsenses = app.consenses ?? [];
-
-                return (
-                  <details
-                    className="card details"
-                    key={app.id}
-                    open={openAppId === app.id}
-                    onToggle={(event) => {
-                      const isOpen = (event.currentTarget as HTMLDetailsElement).open;
-                      setOpenAppId(isOpen ? app.id : null);
-                      if (isOpen) {
-                        void loadPeople(app);
-                      }
-                    }}
-                  >
-                    <summary className="list-item">
-                      <div>
+                  return (
+                    <div className="stack">
+                      <div className="panel-header">
                         <div>
-                          <strong>{app.name}</strong>{" "}
-                          {app.questionnaireVote ? (
-                            <span className="muted">({app.questionnaireVote})</span>
-                          ) : (
-                            <span className="muted">(no vote)</span>
-                          )}
+                          <h2 style={{ margin: 0 }}>{selectedApp.name}</h2>
+                          <div className="muted">
+                            {selectedApp.questionnaireVote
+                              ? `Vote: ${selectedApp.questionnaireVote}`
+                              : "Vote: —"}
+                          </div>
                         </div>
-                        {app.description ? <div className="muted">{app.description}</div> : null}
+                        <button className="btn" onClick={closePanel} type="button">
+                          Close
+                        </button>
                       </div>
-                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+
+                      {selectedApp.description ? (
+                        <div className="muted">{selectedApp.description}</div>
+                      ) : null}
+
+                      <div className="panel-actions">
                         <Link
                           className="btn"
-                          to={`/privacy-notice?appId=${encodeURIComponent(app.id)}`}
-                          onClick={(e) => e.stopPropagation()}
+                          to={`/privacy-notice?appId=${encodeURIComponent(selectedApp.id)}`}
                         >
                           Privacy Notice
                         </Link>
                         <Link
                           className="btn"
-                          to={`/rights?appId=${encodeURIComponent(app.id)}`}
-                          onClick={(e) => e.stopPropagation()}
+                          to={`/rights?appId=${encodeURIComponent(selectedApp.id)}`}
                         >
                           GDPR Rights
                         </Link>
                         {canSeeSubjects ? (
                           <Link
                             className="btn"
-                            to={`/questionnaire?appId=${encodeURIComponent(app.id)}`}
-                            onClick={(e) => e.stopPropagation()}
+                            to={`/questionnaire?appId=${encodeURIComponent(selectedApp.id)}`}
                           >
                             Questionnaire
                           </Link>
                         ) : null}
                       </div>
-                    </summary>
 
-                    <div className="details-body">
                       {people.loading ? <div className="muted">Loading…</div> : null}
                       {people.error ? <div className="error">{people.error}</div> : null}
 
@@ -431,9 +493,17 @@ export function AppsPage() {
                                     <button
                                       className="btn"
                                       type="button"
-                                      disabled={busy || people.updatingAllConsents || people.removingEverything}
+                                      disabled={
+                                        busy ||
+                                        people.updatingAllConsents ||
+                                        people.removingEverything
+                                      }
                                       onClick={() =>
-                                        void updateConsent(app, consent, accepted ? "withdraw" : "accept")
+                                        void updateConsent(
+                                          selectedApp,
+                                          consent,
+                                          accepted ? "withdraw" : "accept",
+                                        )
                                       }
                                     >
                                       {busy ? "Updating…" : accepted ? "Withdraw" : "Accept"}
@@ -446,7 +516,7 @@ export function AppsPage() {
                                 className="btn"
                                 type="button"
                                 disabled={people.updatingAllConsents || !!people.updatingConsent}
-                                onClick={() => void withdrawAllConsents(app)}
+                                onClick={() => void withdrawAllConsents(selectedApp)}
                               >
                                 {people.updatingAllConsents ? "Withdrawing…" : "Withdraw all"}
                               </button>
@@ -458,18 +528,18 @@ export function AppsPage() {
                             className="btn"
                             type="button"
                             disabled={people.removingEverything}
-                            onClick={() => void removeEverything(app)}
+                            onClick={() => void removeEverything(selectedApp)}
                           >
                             {people.removingEverything ? "Sending…" : "Remove everything"}
                           </button>
                         </div>
                       ) : null}
                     </div>
-                  </details>
-                );
-              })}
+                  );
+                })()
+              )}
             </div>
-          ) : null}
+          </aside>
         </div>
       ) : null}
     </div>
