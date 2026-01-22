@@ -99,6 +99,13 @@ public class SecurityConfiguration extends VaadinWebSecurityConfigurerAdapter {
         super.configure(http);
         setLoginView(http, LoginView.class, LOGOUT_URL);
         http.requestCache().requestCache(requestCache());
+        http.logout()
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/react/login")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID");
+        // Ensure CSRF stays disabled (Vaadin's security config may re-enable it).
+        http.csrf().disable();
     }
 
     @Override
